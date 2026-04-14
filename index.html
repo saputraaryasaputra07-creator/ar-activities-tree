@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Activities - Cowboy Planner</title>
+    <style>
+        :root {
+            --desert-sand: #edc9af;
+            --dusty-brown: #a0522d;
+            --sunset-orange: #ff4500;
+            --cowboy-leather: #4b2e1d;
+            --paper: #f4e4bc;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #ff8c00, var(--desert-sand));
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--cowboy-leather);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: var(--paper);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            border: 8px solid var(--cowboy-leather);
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            position: relative;
+        }
+
+        /* Dekorasi "WANTED" Style */
+        .container::before {
+            content: "🤠 AR ACTIVITIES 🌵";
+            display: block;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            border-bottom: 3px double var(--cowboy-leather);
+        }
+
+        h3 {
+            border-left: 5px solid var(--sunset-orange);
+            padding-left: 10px;
+            margin-top: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            border: 2px solid var(--cowboy-leather);
+            background: transparent;
+            font-family: inherit;
+            flex: 1;
+        }
+
+        button {
+            background-color: var(--cowboy-leather);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--sunset-orange);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: rgba(0,0,0,0.05);
+            margin-bottom: 5px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--cowboy-leather);
+        }
+
+        .delete-btn {
+            background: #cc0000;
+            font-size: 0.8rem;
+            padding: 5px;
+        }
+
+        .total-box {
+            background: var(--cowboy-leather);
+            color: var(--paper);
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .sun {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 0 0 50px orange;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sun"></div>
+
+    <div class="container">
+        <h3>Log Aktivitas (Sheriff's Duty)</h3>
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Contoh: Ke Bar Pukul 09:00">
+            <button onclick="addItem('task')">TAMBAH</button>
+        </div>
+        <ul id="taskList"></ul>
+
+        <h3>Kantong Emas (Pengeluaran)</h3>
+        <div class="input-group">
+            <input type="text" id="expenseName" placeholder="Barang/Jasa">
+            <input type="number" id="expenseAmount" placeholder="Harga ($)" style="max-width: 100px;">
+            <button onclick="addItem('expense')">BAYAR</button>
+        </div>
+        <ul id="expenseList"></ul>
+
+        <div class="total-box">
+            Sisa Emas Hari Ini: $<span id="totalDisplay">0</span>
+        </div>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('ar_tasks')) || [];
+        let expenses = JSON.parse(localStorage.getItem('ar_expenses')) || [];
+
+        function render() {
+            // Render Tasks
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach((t, i) => {
+                taskList.innerHTML += `<li><span>🐎 ${t}</span> <button class="delete-btn" onclick="deleteItem('task', ${i})">X</button></li>`;
+            });
+
+            // Render Expenses
+            const expenseList = document.getElementById('expenseList');
+            let total = 0;
+            expenseList.innerHTML = '';
+            expenses.forEach((e, i) => {
+                total += parseFloat(e.amount);
+                expenseList.innerHTML += `<li><span>💰 ${e.name}</span> <span>$${e.amount} <button class="delete-btn" onclick="deleteItem('expense', ${i})">X</button></span></li>`;
+            });
+
+            document.getElementById('totalDisplay').innerText = total;
+            
+            localStorage.setItem('ar_tasks', JSON.stringify(tasks));
+            localStorage.setItem('ar_expenses', JSON.stringify(expenses));
+        }
+
+        function addItem(type) {
+            if (type === 'task') {
+                const val = document.getElementById('taskInput').value;
+                if(val) { tasks.push(val); document.getElementById('taskInput').value = ''; }
+            } else {
+                const name = document.getElementById('expenseName').value;
+                const amount = document.getElementById('expenseAmount').value;
+                if(name && amount) {
+                    expenses.push({name, amount});
+                    document.getElementById('expenseName').value = '';
+                    document.getElementById('expenseAmount').value = '';
+                }
+            }
+            render();
+        }
+
+        function deleteItem(type, index) {
+            if (type === 'task') tasks.splice(index, 1);
+            else expenses.splice(index, 1);
+            render();
+        }
+
+        // Initial Load
+        render();
+    </script>
+</body>
+</html>
